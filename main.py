@@ -1,8 +1,8 @@
-
+import pyGameCore
 
 def main():
-  
-  return 10
+  pyGameCore.RunGame()
+  return 0
 
 
 
