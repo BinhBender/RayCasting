@@ -1,40 +1,95 @@
 import pygame
+import numpy as np
 
-# Window size
-WINDOW_WIDTH    = 400
-WINDOW_HEIGHT   = 400
-
-### initialisation
+# Initialize all imported pygame modules
 pygame.init()
-window = pygame.display.set_mode( ( WINDOW_WIDTH, WINDOW_HEIGHT ) )
-pygame.display.set_caption("Gradient Rect")
 
-def gradientRect( window, left_colour, right_colour, target_rect ):
-    """ Draw a horizontal-gradient filled rectangle covering <target_rect> """
-    colour_rect = pygame.Surface( ( 2, 2 ) )                                   # tiny! 2x2 bitmap
-    pygame.draw.line( colour_rect, left_colour,  ( 0,0 ), ( 0,1 ) )            # left colour line
-    pygame.draw.line( colour_rect, right_colour, ( 1,0 ), ( 1,1 ) )            # right colour line
-    colour_rect = pygame.transform.smoothscale( colour_rect, ( target_rect.width, target_rect.height ) )  # stretch!
-    window.blit( colour_rect, target_rect )                                    # paint it
+# Define some constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+FPS = 60
 
+# Set up the display surface
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption('Advanced Shader Programming with Pygame')
 
-### Main Loop
+# Vertex shader program
+vertex_shader = '''
+varying vec2 vTexCoord;
+
+void main() {
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    vTexCoord = vec2(gl_MultiTexCoord0);
+}
+'''
+
+# Fragment shader program for a simple light effect
+fragment_shader = '''
+uniform sampler2D uTexture;
+varying vec2 vTexCoord;
+uniform vec3 uLightColor;
+uniform vec3 uLightPosition;
+uniform float uLightPower;
+
+void main() {
+    vec4 textureColor = texture2D(uTexture, vTexCoord);
+    vec3 lightDir = normalize(uLightPosition - vec3(gl_FragCoord.xy, 0.0));
+    float diff = max(dot(lightDir, vec3(0.0, 0.0, 1.0)), 0.0);
+    vec3 diffuse = uLightColor * textureColor.rgb * diff * uLightPower;
+    gl_FragColor = vec4(diffuse + textureColor.rgb, textureColor.a);
+}
+'''
+
+# Create a texture
+def create_texture(width, height, color):
+    texture_data = np.full((height, width, 3), color, dtype=np.uint8)
+    texture_surface = pygame.surfarray.make_surface(texture_data)
+    texture = screen.convert(texture_surface)
+    return texture
+
+# Compile shader function
+def compile_shader(shader_code, shader_type):
+    shader = glCreateShader(shader_type)
+    glShaderSource(shader, shader_code)
+    glCompileShader(shader)
+    return shader
+
+# Link shader program
+def link_program(vertex_shader, fragment_shader):
+    program = glCreateProgram()
+    glAttachShader(program, vertex_shader)
+    glAttachShader(program, fragment_shader)
+    glLinkProgram(program)
+    return program
+
+# Main loop
+running = True
 clock = pygame.time.Clock()
-finished = False
-while not finished:
-
-    # Handle user-input
+while running:
     for event in pygame.event.get():
-        if ( event.type == pygame.QUIT ):
-            done = True
-
-    # Update the window
-    window.fill( ( 0,0,0 ) )
-    gradientRect( window, (0, 255, 0), (0, 0, 0), pygame.Rect( 10,100, 300, 100 ) )
-    gradientRect( window, (255, 255, 0), (0, 0, 255), pygame.Rect( 100,200, 128, 64 ) )
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Update game logic here
+    
+    # Drawing code
+    screen.fill((0, 0, 0))  # Fill the screen with black
+    
+    # Activate shader program
+    glUseProgram(shader_program)
+    
+    # Set shader uniforms
+    glUniform3f(uLightColor_loc, 1.0, 1.0, 1.0)  # White light
+    glUniform3f(uLightPosition_loc, 400.0, 300.0, 0.0)  # Center of screen
+    glUniform1f(uLightPower_loc, 1.0)  # Light power
+    
+    # Draw textured quad here using shaders
+    
+    # Swap the display buffers
     pygame.display.flip()
 
-    # Clamp FPS
-    clock.tick_busy_loop(60)
+    # Cap the frame rate
+    clock.tick(FPS)
 
+# Clean up
 pygame.quit()

@@ -7,10 +7,12 @@ import structures
 import math
 from pygame import Vector2
 
+  
+
 def RunGame():
   # pygame setup
   pygame.init()
-  Bounds = (1600, 900)
+  Bounds = (1280, 720)
   screen = pygame.display.set_mode(Bounds)
   pygame.display.set_caption("Ray Casting by Binh Nguyen")
   clock = pygame.time.Clock()
@@ -18,8 +20,8 @@ def RunGame():
 
   #camfldkjakY = 300
   rot = Vector2(0,0)
-  Cam = raycast.Camera(500, 500, 270)
-  Cam.Set_Fov(90)
+  Cam = raycast.Camera(Bounds[0]/2, Bounds[1]/2, Bounds[0])
+  Cam.Set_Fov(103)
 
   PosOffset = Vector2(500, 500)
   #Maps
@@ -44,6 +46,7 @@ def RunGame():
   def DrawLines(listLines):
     for i in listLines:
       pygame.draw.line(screen, 0x00ffffff, i.start, i.end, 5)
+
   def DrawRayCastLines(pos, listLines):
     for i in listLines:
       pygame.draw.aaline(screen, 0x00ffffff, pos, i, 1)
@@ -88,7 +91,7 @@ def RunGame():
         movement.x = 1.0
     #print(movement)
     return movement
-      
+#Main Loop
   while running:
       move = Vector2(0,0)
       # poll for events
@@ -102,29 +105,38 @@ def RunGame():
           print(move)
 
       if move != Vector2(0,0):
-        PosOffset.x += move.x * 100
-        PosOffset.y += move.y * 100
+        PosOffset.x += move.x * 50
+        PosOffset.y += move.y * 50
         #Cam.move(move, 100)
         #print(Cam.position)
     
       # fill the screen with a color to wipe away anything from last frame
       screen.fill(0x00000000)
+      #Rotation of the character
+      #This is for a orbit effect, only for demo of raycasting
       rot = Cam.RotationMatrix(rot.x, rot.y, .01)
       Cam.position.x = rot.x + PosOffset.x
       Cam.position.y = rot.y + PosOffset.y
-      #print(Cam.position)
+
+      #Gets points the cam in the direction of the mouse
+      #Cam.direction = Vector2(pygame.mouse.get_pos()[0] - Cam.position.x ,pygame.mouse.get_pos()[1] - Cam.position.y).normalize() 
+      #Rotates the character based on the movement of the x direction of the mouse
+      Cam.Rotate(pygame.mouse.get_rel()[0]/100)
 
       # RENDER YOUR GAME HERE
       #Draws the walls
-      DrawLines(MapManager.objects)
-      Cam.direction = Vector2(-pygame.mouse.get_pos()[0] + Cam.position.x ,-pygame.mouse.get_pos()[1] + Cam.position.y).normalize() 
+      #DrawLines(MapManager.objects)
+      pygame.draw.rect(screen, 0x0000ff00, pygame.Rect(0,Bounds[1]/2, Bounds[0],Bounds[1]/2))
+
+
       endpoints = Cam.RaycastSphere(MapManager.objects)
-      endpoints.append(Cam.position)
+      Cam.Render(screen, MapManager.objects, endpoints)
+      #endpoints.append(Cam.position) #This is for the polygon stuff
       #Draw the raycast lines
-      DrawLight(endpoints)
+      #DrawLight(endpoints)
       #DrawRayCastLines(Cam.position,endpoints)
       #Draw circle pf players
-      pygame.draw.circle(screen, 0x00ffffff, Cam.position, 20)
+      #pygame.draw.circle(screen, 0x00ffffff, Cam.position, 20)
       #Cam.Rotate(0.01)
       # flip() the display to put your work on screen
 

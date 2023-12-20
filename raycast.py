@@ -24,9 +24,8 @@ class Camera:
     self.position = Vector2(posx, posy)
     self.resolution = resolution  #How many rays we will be drawing within the fov
 
-    self.dirx = 1
-    self.diry = -3
-    self.direction = Vector2(self.dirx, self.diry).normalize()
+
+    self.direction = Vector2(1,0)
     self.fov = 360
     
   def move(self, direction, speed):
@@ -66,9 +65,9 @@ class Camera:
       return Vector2(x1 + t * (x2 - x1), y1 + t * (y2 - y1))
     return None
   def Rotate(self, turnAmount):
-    x = self.dirx
-    y = self.diry
-    self.direction = Vector2((x * math.cos(turnAmount)) - (y * math.sin(turnAmount)), (x * math.sin(turnAmount) )+ (y * math.cos(turnAmount)))
+    #x = self.dirx
+    #y = self.diry
+    self.direction = Vector2((self.direction.x * math.cos(turnAmount)) - (self.direction.y * math.sin(turnAmount)), (self.direction.x * math.sin(turnAmount) )+ (self.direction.y * math.cos(turnAmount)))
 
     self.dirx = self.direction.x
     self.diry = self.direction.y
@@ -104,10 +103,10 @@ class Camera:
 
   def RaycastSphere(self, _map):
     #How much we are moving per degree
-    fov =  math.radians(self.fov)
-    anglestep = fov / self.resolution
+    fovRad =  math.radians(self.fov)
+    anglestep = -fovRad / self.resolution
 
-    start = self.RotationMatrix(self.direction.x, self.direction.y, 1.5* fov)
+    start = self.RotationMatrix(self.direction.x, self.direction.y, fovRad/2)
     i = 0
     ray = start
 
@@ -121,7 +120,25 @@ class Camera:
       ray = self.RotationMatrix(ray.x, ray.y, anglestep)
 
     return EndPoints
+  def Render(self, screen, _map, endpoints) -> list:
+    j = screen.get_width()
+    for i in endpoints:
+      dist = self.position.distance_to(i)
+      
+      #print(f" Distance: {dist}")
+      maxBright = pygame.Color("white")
+      
+      #The 1000 for the distance limit is arbitrary
+      brightness = maxBright.lerp(0, pygame.math.clamp(dist,0.0, 1000.0)/ 1000.0)
 
+      start = Vector2(j, math.sqrt(dist) *5) 
+      print(f"Start: {start}")
+      end = Vector2(j, screen.get_height() - math.sqrt(dist)*5)
+      print(f"End: {end}")
 
+      #print(f" Brightness: {brightness}")
+      pygame.draw.line(screen, brightness, start, end)
+      j -= 1
+               
 
 c = Camera(10, 10, 90)
