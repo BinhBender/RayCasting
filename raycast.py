@@ -120,25 +120,33 @@ class Camera:
       ray = self.RotationMatrix(ray.x, ray.y, anglestep)
 
     return EndPoints
-  def Render(self, screen, _map, endpoints) -> list:
-    j = screen.get_width()
+    
+  def CosineLerp(self, value, _max) -> int:
+    return int(_max * (math.cos(math.pi*value) + 1)/2)
+  def Render(self, screen, _map, endpoints):
+    j = screen.get_width()-1
     for i in endpoints:
       dist = self.position.distance_to(i)
-      
+      #print(dist)
       #print(f" Distance: {dist}")
-      maxBright = pygame.Color("white")
+      maxBright = pygame.Color('white')
       
-      #The 1000 for the distance limit is arbitrary
-      brightness = maxBright.lerp(0, pygame.math.clamp(dist,0.0, 1000.0)/ 1000.0)
-
-      start = Vector2(j, math.sqrt(dist) *5) 
-      print(f"Start: {start}")
-      end = Vector2(j, screen.get_height() - math.sqrt(dist)*5)
-      print(f"End: {end}")
+      #Depth is for color and the max distance for which it will turn dark
+      depth = 1000
+      
+      #colorValue = pygame.Color(255,255,255)
+      #colorValue.r = self.CosineLerp(pygame.math.clamp(dist,0, depth)/ depth, 255)
+      #colorValue.g = self.CosineLerp(pygame.math.clamp(dist,0, depth)/ depth, 255)
+      #colorValue.b = self.CosineLerp(pygame.math.clamp(dist,0, depth)/ depth, 255)
+      brightness = maxBright.lerp(0, pygame.math.clamp(dist,0.0, depth)/ depth)
+      b = i - self.position
+      dist = b.project(self.direction).magnitude()
+      #dist = math.sqrt(dist) * 5
+      start = Vector2(j, pygame.math.clamp(dist,0.0, 360)) 
+      end = Vector2(j, pygame.math.clamp(screen.get_height() - dist,360, 720))
 
       #print(f" Brightness: {brightness}")
       pygame.draw.line(screen, brightness, start, end)
       j -= 1
-               
 
 c = Camera(10, 10, 90)

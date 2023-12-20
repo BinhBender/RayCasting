@@ -21,7 +21,7 @@ def RunGame():
   #camfldkjakY = 300
   rot = Vector2(0,0)
   Cam = raycast.Camera(Bounds[0]/2, Bounds[1]/2, Bounds[0])
-  Cam.Set_Fov(103)
+  Cam.Set_Fov(45)
 
   PosOffset = Vector2(500, 500)
   #Maps
@@ -48,11 +48,19 @@ def RunGame():
       pygame.draw.line(screen, 0x00ffffff, i.start, i.end, 5)
 
   def DrawRayCastLines(pos, listLines):
+    s = pygame.Surface((Bounds[0],Bounds[1]))
+    s.set_alpha(50)
+    
     for i in listLines:
-      pygame.draw.aaline(screen, 0x00ffffff, pos, i, 1)
-      pygame.draw.circle(screen, 0x00ff0000, i, 6) #This lets us see the endpoints
+      pygame.draw.line(s, (255,255,255), pos, i, 1)
+      #pygame.draw.circle(screen, 0x00ff0000, i, 6) #This lets us see the endpoints
+    
+    screen.blit(s,(0,0))
   def DrawLight(listLines):
-    pygame.draw.polygon(screen, 0x00444444, listLines)
+    s = pygame.Surface((Bounds[0],Bounds[1]))
+    s.set_alpha(50)
+    pygame.draw.polygon(s, (255,255,255), listLines)
+    screen.blit(s,(0,0))
       
   def DrawRay():
     closestmag = math.inf
@@ -131,9 +139,9 @@ def RunGame():
 
       endpoints = Cam.RaycastSphere(MapManager.objects)
       Cam.Render(screen, MapManager.objects, endpoints)
-      #endpoints.append(Cam.position) #This is for the polygon stuff
+      endpoints.append(Cam.position) #This is for the polygon stuff
       #Draw the raycast lines
-      #DrawLight(endpoints)
+      DrawLight(endpoints)
       #DrawRayCastLines(Cam.position,endpoints)
       #Draw circle pf players
       #pygame.draw.circle(screen, 0x00ffffff, Cam.position, 20)
